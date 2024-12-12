@@ -1,0 +1,64 @@
+package com.example.myapplication;
+
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.TimePicker;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.Calendar;
+
+public class MainActivity extends AppCompatActivity {
+
+    private TimePicker timePicker;
+    private Button btnTimer;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Initialize views
+        timePicker = findViewById(R.id.timePicker);
+        btnTimer = findViewById(R.id.btnTimer);
+
+        // Set click listener for the button
+        btnTimer.setOnClickListener(v -> {
+            // Get the time from the TimePicker
+            int hour = timePicker.getHour();
+            int minute = timePicker.getMinute();
+
+            // Set an alarm
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR_OF_DAY, hour);
+            calendar.set(Calendar.MINUTE, minute);
+            calendar.set(Calendar.SECOND, 0);
+
+            // Check if the time is in the past
+            if (calendar.before(Calendar.getInstance())) {
+                calendar.add(Calendar.DATE, 1);
+            }
+
+            // Schedule the alarm
+            scheduleAlarm(calendar);
+
+            // Show confirmation to the user
+            Toast.makeText(this, "Alarm set for: " + hour + ":" + String.format("%02d", minute), Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void scheduleAlarm(Calendar calendar) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, MyBroadcastReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        if (alarmManager != null) {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+        }
+    }
+}
